@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th" data-bs-theme="<%= theme || 'dark' %>">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= pageTitle || 'Novel Detail (Reader)' %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* ใช้ตัวแปรตามธีม เพื่อให้เปลี่ยนสีทั้งหน้าแบบเนียน ๆ */
+    :root {
+      --bg:#111; --text:#e9ecef; --card:#181818; --border:#2b2b2b; --cover:#2a2a2a;
+    }
+    [data-bs-theme="light"] {
+      --bg:#f8f9fa; --text:#212529; --card:#ffffff; --border:#dee2e6; --cover:#e9ecef;
+    }
+    body { background:var(--bg); color:var(--text); }
+    .card, .list-group-item { background:var(--card); border-color:var(--border); }
+    .text-muted-2 { color: var(--bs-secondary-color) !important; }
+    .cover { aspect-ratio:4/3; background:var(--cover); }
+  </style>
+  <script>
+  // ตั้งธีมจาก localStorage ทันทีที่โหลด (กันกะพริบ)
+  (function () {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-bs-theme', saved);
+  })();
+</script>
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 125px;" id="navbar">
+    <div class="container-fluid row">
+      <a class="navbar-brand d-flex align-items-center col-1" href="/">
+        <img src="/images/logo.png" alt="logo" style="height: 40px;">
+        <span class="ms-2">MySite</span>
+      </a>
+      <div style="display: flex;" class="col-3">
+        <div class="row">
+          <img class="col-3" src="/images/search.png" alt="search" style="height: 40px;">
+          <form class="col-9" id="search" style="display: flex;justify-content: center;">
+            <input class="rounded-pill" type="search" name="search" id="search">
+          </form>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse justify-content-center col-6" id="navbarNav-Catagory">
+        <ul class="navbar-nav">
+          <% categories.forEach(category=> { %>
+            <li class="nav-item me-3">
+              <a class="nav-link" href="#">
+                <%= category %>
+              </a>
+            </li>
+            <% }); %>
+        </ul>
+      </div>
+      <div class="collapse navbar-collapse justify-content-end col-2" id="navbarNav-user">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/topup">
+              <button class="rounded-pill"
+                style="color: rgb(0, 0, 0); background-color: gold; display: flex; justify-content: center; align-items: center;height: 30px;">
+                <img src="/images/coin.png" alt="pic-coin" class="img-fluid" style="height: 30px;">
+                <span>Coin</span>
+              </button>
+            </a>
+          </li>
+          <% if (!user) { %>
+            <!-- ยังไม่ login -->
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login">
+                <button class="rounded-pill" style="color: white; background-color: black;">
+                  Login
+                </button>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#" data-bs-toggle="modal"
+                data-bs-target="#settingsModal">
+                <button class="rounded-pill" style="color: white; background-color: gray;">
+                  ⚙️
+                </button>
+              </a>
+            </li>
+            <% } else { %>
+              <!-- login แล้ว -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <button class="rounded-pill" style="color: white; background-color: black;">
+                    Profile (<%= user.username %>)
+                  </button>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/account">Account</a></li>
+                  <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                      data-bs-target="#settingsModal">Settings</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+        </ul>
+      </div>
+  </nav>
+
+<main class="container my-4">
+
+  <!-- Hero: ปก + ข้อมูลสำหรับผู้อ่าน -->
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="rounded cover d-flex align-items-center justify-content-center">
+        <% if (novel && novel.coverUrl) { %>
+          <img src="<%= novel.coverUrl %>" alt="cover" class="img-fluid rounded" style="object-fit:cover;width:100%;height:100%">
+        <% } else { %>
+          <span class="text-muted-2">Cover</span>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-center justify-content-between">
+            <div>
+              <h3 class="mb-1"><%= (novel && novel.name) || 'ชื่อเรื่อง' %></h3>
+              <div class="text-muted-2">by
+                <a href="#" class="link-underline link-underline-opacity-0">
+                  <%= (novel && novel.author) || 'ผู้เขียนนิยาย' %>
+                </a>
+              </div>
+              <div class="mt-2">
+                <% if (novel && novel.isPublic) { %>
+                  <span class="badge bg-success me-1">Public</span>
+                <% } %>
+                <% (novel && novel.tags ? novel.tags : ['Romance','Fantasy']).forEach(function(tag){ %>
+                  <span class="badge text-bg-secondary"><%= tag %></span>
+                <% }) %>
+              </div>
+            </div>
+            <div class="text-end mt-3 mt-md-0">
+              <div class="small text-muted-2">
+                ⭐ <%= (novel && novel.rating) || '4.8' %> ·
+                <%= (novel && novel.readers) || '0' %> readers ·
+                <%= (novel && novel.totalChapters) || (chapters ? chapters.length : 0) %> ตอน
+              </div>
+              <div class="small text-muted-2">อัปเดตล่าสุด:
+                <%= (novel && novel.updatedAt) || '-' %>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-secondary">
+
+          <p class="mb-3"><%= (novel && novel.blurb) || 'คำโปรยสั้นสำหรับผู้อ่าน' %></p>
+
+          <!-- CTA สำหรับผู้อ่าน -->
+          <div class="d-flex flex-wrap gap-2">
+            <a href="#chapters" class="btn btn-primary">อ่านตอนล่าสุด</a>
+            <button class="btn btn-outline-secondary" id="followBtn"
+              data-followed="<%= novel && novel.followed ? '1':'0' %>">
+              <%= (novel && novel.followed) ? 'กำลังติดตาม ✓' : 'ติดตามเรื่องนี้' %>
+            </button>
+            <button class="btn btn-outline-secondary">แชร์</button>
+            <button class="btn btn-outline-secondary">รายงานปัญหา</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- แถบเตือน paywall -->
+  <div class="alert bg-body-tertiary border mt-4 d-flex align-items-center" role="alert">
+    <div class="me-auto">
+      บางตอนเป็นแบบเสีย Coin — ปลดล็อกต่อครั้งและอ่านได้ถาวร
+    </div>
+    <a href="/topup" class="btn btn-warning btn-sm text-dark">เติม Coin</a>
+  </div>
+
+  <!-- รายชื่อตอน -->
+  <section id="chapters" class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">รายชื่อตอน</h5>
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-muted-2"><%= (novel && novel.totalChapters) || (chapters ? chapters.length : 0) %> ตอน</small>
+        <select class="form-select form-select-sm" style="width:auto">
+          <option>ล่าสุด → เก่าสุด</option>
+          <option>เก่าสุด → ล่าสุด</option>
+        </select>
+      </div>
+    </div>
+
+    <ul class="list-group list-group-flush" id="chapterList">
+      <% (chapters || []).forEach(function(ch){ %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">ตอนที่ <%= ch.index %> • <%= ch.title %></div>
+            <small class="text-muted-2">
+              <% if (ch.isFree) { %>ฟรี<% } else { %><%= ch.cost %> Coins<% } %>
+              · <%= ch.date %>
+            </small>
+          </div>
+
+          <% if (ch.isFree || ch.unlocked) { %>
+            <a class="btn btn-primary btn-sm" href="/reader/<%= ch.id %>">อ่าน</a>
+          <% } else { %>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary btn-sm unlock-btn"
+                      data-cost="<%= ch.cost %>" data-ch="<%= ch.id %>">ปลดล็อก</button>
+              <a class="btn btn-secondary btn-sm disabled" aria-disabled="true">อ่าน</a>
+            </div>
+          <% } %>
+        </li>
+      <% }) %>
+
+      <% if (!(chapters && chapters.length)) { %>
+        <li class="list-group-item text-center text-muted-2">ยังไม่มีตอน</li>
+      <% } %>
+    </ul>
+  </section>
+
+  <!-- เพิ่มความคิดเห็น -->
+  <section class="mt-5">
+    <h5>แสดงความคิดเห็น</h5>
+    <div class="card">
+      <div class="card-body">
+        <form action="/novel/<%= novel && novel.id %>/comments" method="post">
+          <textarea name="text" class="form-control mb-3"
+                    rows="3" placeholder="เขียนความคิดเห็นของคุณ..."></textarea>
+          <div class="text-end">
+            <button class="btn btn-primary btn-sm" type="submit">ส่งความคิดเห็น</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ความคิดเห็น -->
+  <section class="mt-4">
+    <h5>ความคิดเห็น (<%= comments ? comments.length : 0 %>)</h5>
+
+    <% (comments || []).forEach(function(c){ %>
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong><%= c.user %></strong>
+              <% if (c.isTop) { %><span class="badge bg-success">TOP</span><% } %>
+              <div class="small text-muted-2"><%= c.date %></div>
+            </div>
+            <div class="small text-muted-2"><%= c.likes %> ถูกใจ · ตอบกลับ</div>
+          </div>
+          <p class="mb-0 mt-2"><%= c.text %></p>
+
+          <% if (c.replies && c.replies.length) { %>
+            <div class="border-start ps-3 mt-3">
+              <% c.replies.forEach(function(r){ %>
+                <div class="small text-muted-2"><%= r.user %> — <%= r.timeAgo %></div>
+                <div class="small mb-2"><%= r.text %></div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% }) %>
+  </section>
+
+</main>
+
+<footer class="bg-body-tertiary text-secondary mt-5 py-4 border-top">
+  <div class="container text-center small">
+    <p class="mb-1">© <%= new Date().getFullYear() %> Novel Platform</p>
+    <p class="mb-0">Help · Terms · Privacy</p>
+  </div>
+</footer>
+    <script src="/js/settings.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ---- Theme toggle (จำค่าด้วย localStorage) ----
+  (function(){
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme');
+    if (saved) html.setAttribute('data-bs-theme', saved);
+
+    const toggle = document.getElementById('themeToggle');
+    const syncToggle = () => { toggle.checked = (html.getAttribute('data-bs-theme') === 'dark'); };
+    syncToggle();
+
+    toggle.addEventListener('change', () => {
+      const theme = toggle.checked ? 'dark' : 'light';
+      html.setAttribute('data-bs-theme', theme);
+      localStorage.setItem('theme', theme);
+    });
+  })();
+
+  // demo: follow/unfollow (client-only; ควรต่อ API จริง)
+  (function(){
+    var btn = document.getElementById('followBtn');
+    if (!btn) return;
+    var followed = btn.dataset.followed === '1';
+    btn.addEventListener('click', function(){
+      followed = !followed;
+      btn.dataset.followed = followed ? '1' : '0';
+      btn.classList.toggle('btn-outline-secondary', !followed);
+      btn.classList.toggle('btn-success', followed);
+      btn.textContent = followed ? 'กำลังติดตาม ✓' : 'ติดตามเรื่องนี้';
+      // TODO: fetch('/api/follow/:novelId', { method:'POST' })
+    });
+  })();
+
+  // demo: ปลดล็อกตอนด้วย Coins (client-only; ควรต่อ API จริง)
+  (function(){
+    var coinEl = document.getElementById('coins');
+    function getCoins(){ return parseInt(coinEl.textContent || '0', 10); }
+    function setCoins(v){ coinEl.textContent = String(v); }
+
+    document.querySelectorAll('.unlock-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var cost = parseInt(btn.dataset.cost,10);
+        var ch = btn.dataset.ch;
+        var have = getCoins();
+        if(have < cost){
+          alert('Coin ไม่พอ กรุณาเติมเหรียญ');
+          return;
+        }
+        // TODO: เรียก API จริง /api/chapters/:id/unlock
+        setCoins(have - cost);
+
+        var container = btn.closest('.d-flex');
+        btn.remove();
+        var read = container.querySelector('.btn.disabled');
+        read.classList.remove('btn-secondary','disabled');
+        read.classList.add('btn-primary');
+        read.textContent = 'อ่าน';
+        read.setAttribute('href', '/reader/' + ch);
+      });
+    });
+  })();
+</script>
+</body>
+</html>

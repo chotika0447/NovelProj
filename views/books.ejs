@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Ei Novel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 125px;" id="navbar">
+    <div class="container-fluid row">
+      <a class="navbar-brand d-flex align-items-center col-1" href="/">
+        <img src="/images/logo.png" alt="logo" style="height: 40px;">
+        <span class="ms-2">Ei Novel</span>
+      </a>
+      <div style="display: flex;" class="col-3">
+        <div class="row">
+          <img class="col-3" src="/images/search.png" alt="search" style="height: 40px;">
+          <form class="col-9" id="search" style="display: flex;justify-content: center;">
+            <input class="rounded-pill" type="search" name="q" id="search">
+          </form>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse justify-content-center col-6" id="navbarNav-Catagory">
+        <ul class="navbar-nav">
+          <% categoriesnav.forEach(category=> { %>
+            <li class="nav-item me-3">
+              <a class="nav-link" href="/category/<%= category %>">
+                <%= category %>
+              </a>
+            </li>
+            <% }); %>
+        </ul>
+      </div>
+      <div class="collapse navbar-collapse justify-content-end col-2" id="navbarNav-user">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/topup">
+              <button class="rounded-pill"
+                style="color: rgb(0, 0, 0); background-color: gold; display: flex; justify-content: center; align-items: center;height: 30px;">
+                <img src="/images/coin.png" alt="pic-coin" class="img-fluid" style="height: 30px;">
+                <span>
+                  <%= user ? coins : 'Coin' %>
+                </span>
+              </button>
+            </a>
+          </li>
+          <% if (!user) { %>
+            <!-- ยังไม่ login -->
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login">
+                <button class="rounded-pill" style="color: white; background-color: black;">
+                  Login
+                </button>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <button class="rounded-pill" style="color: white; background-color: gray;">
+                  ⚙️
+                </button>
+              </a>
+            </li>
+            <% } else { %>
+              <!-- login แล้ว -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <button class="rounded-pill" style="color: white; background-color: black;">
+                    Profile (<%= user.username %>)
+                  </button>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/account">Account</a></li>
+                  <li><a class="dropdown-item" href="/writer">Writer</a></li>
+                  <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#settingsModal">Settings</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+        </ul>
+      </div>
+  </nav>
+  <main class="container my-4">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="rounded cover d-flex align-items-center justify-content-center">
+          <% if (novel && novel.coverUrl) { %>
+              <img src="<%= novel.coverUrl %>" alt="cover" class="img-fluid rounded w-50"
+                style="object-fit:cover;width:100%;height:100%">
+            <% } else { %>
+              <span class="text-muted-2">No Cover</span>
+              <% } %>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+              <div>
+                <h3 class="mb-1">
+                  <%= (novel && novel.name) || 'ชื่อเรื่อง' %>
+                </h3>
+                <div class="text-muted-2">by
+                  <span class="text-decoration-underline">
+                    <%= (novel && novel.author) || 'ไม่ระบุผู้เขียน' %>
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <% if (novel && novel.isPublic) { %>
+                    <span class="badge bg-success me-1">Public</span>
+                    <% } %>
+                      <% (novel && novel.tags ? novel.tags : [ (novel && novel.category) || 'Novel'
+                        ]).forEach(function(tag){ %>
+                        <span class="badge text-bg-secondary">
+                          <%= tag %>
+                        </span>
+                        <% }) %>
+                </div>
+              </div>
+              <div class="text-end mt-3 mt-md-0">
+                <div class="small text-muted-2">
+                  ⭐ <%= (novel && novel.rating) || '4.8' %> ·
+                    <%= (novel && novel.readers) || 0 %> readers ·
+                      <%= (novel && novel.totalChapters) || (chapters ? chapters.length : 0) %> ตอน
+                </div>
+                <div class="small text-muted-2">อัปเดตล่าสุด: <%= (novel && novel.updatedAt) || '-' %>
+                </div>
+              </div>
+            </div>
+
+            <hr class="border-secondary">
+
+            <p class="mb-3">
+              <%= (novel && novel.blurb) || 'คำโปรย/คำอธิบายของเรื่อง' %>
+            </p>
+
+            <div class="d-flex flex-wrap gap-2">
+              <% if (firstReadableId) { %>
+                <% if (firstReadableLocked) { %>
+                  <a href="#chapters" class="btn btn-warning text-dark">
+                    เริ่มอ่าน (ปลดล็อกตอนที่ <%= firstReadableIndex %> ก่อน)
+                  </a>
+                  <% } else { %>
+                    <a href="/reader/<%= firstReadableId %>" class="btn btn-primary">
+                      เริ่มอ่านตอนที่ <%= firstReadableIndex %>
+                    </a>
+                    <% } %>
+                      <% } %>
+
+                        <a href="#chapters" class="btn btn-outline-secondary">ดูรายชื่อตอน</a>
+                        <button class="btn btn-outline-secondary" id="followBtn"
+                          data-followed="<%= novel && novel.followed ? '1' : '0' %>">
+                          <%= (novel && novel.followed) ? 'กำลังติดตาม ✓' : 'ติดตามเรื่องนี้' %>
+                        </button>
+                        <button class="btn btn-outline-secondary">แชร์</button>
+                        <button class="btn btn-outline-secondary">รายงานปัญหา</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paywall notice -->
+    <div class="alert border mt-4 d-flex align-items-center" role="alert">
+      <div class="me-auto">บางตอนต้องใช้ Coin — ปลดล็อกครั้งเดียว อ่านได้ถาวร</div>
+      <a href="/topup" class="btn btn-warning btn-sm text-dark">เติม Coin</a>
+    </div>
+
+    <!-- Chapters -->
+    <section id="chapters" class="mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">รายชื่อตอน</h5>
+        <div class="d-flex align-items-center gap-2">
+          <small class="text-muted-2">
+            <%= (novel && novel.totalChapters) || (chapters ? chapters.length : 0) %> ตอน
+          </small>
+          <select class="form-select form-select-sm" style="width:auto" id="sortSel">
+            <option value="desc">ล่าสุด → เก่าสุด</option>
+            <option value="asc">เก่าสุด → ล่าสุด</option>
+          </select>
+        </div>
+      </div>
+
+      <ul class="list-group list-group-flush" id="chapterList">
+        <% (chapters || []).forEach(function(ch){ %>
+          <li class="list-group-item d-flex justify-content-between align-items-center" data-index="<%= ch.index %>"
+            data-published="<%= ch.date %>">
+            <div>
+              <div class="fw-semibold">ตอนที่ <%= ch.index %> • <%= ch.title %>
+              </div>
+              <small class="text-muted-2" style="display: flex;">
+                <%= ch.isFree ? 'ฟรี' : (ch.cost + ' Coins' ) %> · <%= new Date(ch.date).toLocaleDateString() %>
+              </small>
+            </div>
+
+            <% if (ch.isFree || ch.unlocked) { %>
+              <a class="btn btn-primary btn-sm" href="/reader/<%= ch.id %>">อ่าน</a>
+              <% } else { %>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary btn-sm unlock-btn" data-cost="<%= ch.cost %>"
+                    data-ch="<%= ch.id %>">ปลดล็อก</button>
+                  <a class="btn btn-secondary btn-sm disabled" aria-disabled="true">อ่าน</a>
+                </div>
+                <% } %>
+          </li>
+          <% }) %>
+      </ul>
+
+    </section>
+
+    <!-- Add comment -->
+    <section class="mt-5">
+      <h5>แสดงความคิดเห็น</h5>
+      <div class="card">
+        <div class="card-body">
+          <form action="/novel/<%= novel && novel.id %>/comments" method="post">
+            <textarea name="text" class="form-control mb-3" rows="3" placeholder="เขียนความคิดเห็นของคุณ..."></textarea>
+            <div class="text-end">
+              <button class="btn btn-primary btn-sm" type="submit">ส่งความคิดเห็น</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comments -->
+    <section class="mt-4">
+      <h5>ความคิดเห็น (<%= comments ? comments.length : 0 %>)</h5>
+      <% (comments || []).forEach(function(c){ %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <strong>
+                  <%= c.user %>
+                </strong>
+                <% if (c.isTop) { %><span class="badge bg-success">TOP</span>
+                  <% } %>
+                    <div class="small text-muted-2">
+                      <%= c.date %>
+                    </div>
+              </div>
+              <div class="small text-muted-2">
+                <%= c.likes %> ถูกใจ · ตอบกลับ
+              </div>
+            </div>
+            <p class="mb-0 mt-2">
+              <%= c.text %>
+            </p>
+
+            <% if (c.replies && c.replies.length) { %>
+              <div class="border-start ps-3 mt-3">
+                <% c.replies.forEach(function(r){ %>
+                  <div class="small text-muted-2">
+                    <%= r.user %> — <%= r.timeAgo %>
+                  </div>
+                  <div class="small mb-2">
+                    <%= r.text %>
+                  </div>
+                  <% }) %>
+              </div>
+              <% } %>
+          </div>
+        </div>
+        <% }) %>
+    </section>
+
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow" id="settings">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">การตั้งค่าเว็บไซต์</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Font Size -->
+          <div class="mb-3">
+            <label class="form-label">ขนาดตัวอักษร</label>
+            <select id="fontSizeSelect" class="form-select rounded-pill">
+              <option value="14px">เล็ก</option>
+              <option value="16px" selected>ปกติ</option>
+              <option value="20px">ใหญ่</option>
+            </select>
+          </div>
+
+          <!-- Font Family -->
+          <div class="mb-3">
+            <label class="form-label">Font</label>
+            <select id="fontFamilySelect" class="form-select rounded-pill">
+              <option value="Arial, sans-serif" selected>Sans-serif</option>
+              <option value="Georgia, serif">Serif</option>
+              <option value="Courier New, monospace">Monospace</option>
+            </select>
+          </div>
+
+          <!-- Theme -->
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="themeSwitch">
+            <label class="form-check-label" for="themeSwitch">โหมดมืด</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="bg-light text-dark mt-5" id="footer">
+    <div class="container py-4">
+      <div class="row">
+        <!-- Column 1: About -->
+        <div class="col-md-4">
+          <h5>About Us</h5>
+          <p>เว็บไซต์สำหรับติดตามนิยายแนวต่าง ๆ และข่าวสารเกี่ยวกับเรื่องโปรดของคุณ</p>
+        </div>
+
+        <!-- Column 2: Links -->
+        <div class="col-md-4">
+          <h5>Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-decoration-none">Romantic</a></li>
+            <li><a href="#" class="text-decoration-none">Fantasy</a></li>
+            <li><a href="#" class="text-decoration-none">Mystery</a></li>
+            <li><a href="#" class="text-decoration-none">Action</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Contact -->
+        <div class="col-md-4">
+          <h5>Contact</h5>
+          <p>Email: websiteeinovel@gmail.com</p>
+          <p>Phone: +66 123 456 789</p>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        &copy; 2025 MySite. All rights reserved.
+      </div>
+    </div>
+  </footer>
+  <script src="/js/settings.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // สมมติอยู่ที่ /books/<id> หน้าเดียวกับรายละเอียดเล่ม
+    fetch(location.pathname + '/chapters')
+      .then(r => r.json())
+      .then(({ chapters }) => {
+        // ถ้าจะเรนเดอร์เองแทน EJS ก็ทำได้ที่นี่
+        console.log('chapters:', chapters);
+      });
+  </script>
+  <script>
+    const chapterList = document.getElementById('chapterList');
+    const sortSel = document.getElementById('sortSel');
+
+    sortSel.addEventListener('change', () => {
+      const sortOrder = sortSel.value; // 'asc' หรือ 'desc'
+      const items = Array.from(chapterList.querySelectorAll('li[data-published]'));
+
+      items.sort((a, b) => {
+        const dateA = new Date(a.dataset.published);
+        const dateB = new Date(b.dataset.published);
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+
+      chapterList.innerHTML = '';
+      items.forEach(item => chapterList.appendChild(item));
+    });
+  </script>
+</body>
+
+</html>

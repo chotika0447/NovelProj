@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>
+    <%= pageTitle || "Mebcoin - เติมเงิน" %>
+  </title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css">
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 125px;" id="navbar">
+    <div class="container-fluid row">
+      <a class="navbar-brand d-flex align-items-center col-1" href="/">
+        <img src="/images/logo.png" alt="logo" style="height: 40px;">
+        <span class="ms-2">Ei Novel</span>
+      </a>
+      <div style="display: flex;" class="col-3">
+        <div class="row">
+          <img class="col-3" src="/images/search.png" alt="search" style="height: 40px;">
+          <form action="/search" class="col-9" id="search" style="display: flex;justify-content: center;">
+            <input class="rounded-pill" type="search" name="q" id="search">
+          </form>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse justify-content-center col-6" id="navbarNav-Catagory">
+        <ul class="navbar-nav">
+          <% categories.forEach(category=> { %>
+            <li class="nav-item me-3">
+              <a class="nav-link" href="/category/<%= category %>">
+                <%= category %>
+              </a>
+            </li>
+            <% }); %>
+        </ul>
+      </div>
+      <div class="collapse navbar-collapse justify-content-end col-2" id="navbarNav-user">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/topup">
+              <button class="rounded-pill"
+                style="color: rgb(0, 0, 0); background-color: gold; display: flex; justify-content: center; align-items: center;height: 30px;">
+                <img src="/images/coin.png" alt="pic-coin" class="img-fluid" style="height: 30px;">
+                <span>
+                  <%= user ? coins : 'Coin' %>
+                </span>
+              </button>
+            </a>
+          </li>
+          <% if (!user) { %>
+            <!-- ยังไม่ login -->
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login">
+                <button class="rounded-pill" style="color: white; background-color: black;">
+                  Login
+                </button>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <button class="rounded-pill" style="color: white; background-color: gray;">
+                  ⚙️
+                </button>
+              </a>
+            </li>
+            <% } else { %>
+              <!-- login แล้ว -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <button class="rounded-pill" style="color: white; background-color: black;">
+                    Profile (<%= user.username %>)
+                  </button>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/account">Account</a></li>
+                  <li><a class="dropdown-item" href="/writer">Writer</a></li>
+                  <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#settingsModal">Settings</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+        </ul>
+      </div>
+  </nav>
+  <main>
+    <div class="container d-flex flex-column align-items-center justify-content-center text-center"
+      style="min-height: calc(100vh - 125px - 48px);">
+      <div class="card shadow-sm p-4 mx-auto" style="max-width: 420px;">
+        <img src="/images/QR.jpg" alt="QR Code" class="mb-3 d-block mx-auto img-fluid"
+          style="max-width: 100%; height: auto;">
+        <div class="bg-primary text-white fw-bold py-2 rounded">
+          สแกน QR เพื่อชำระเงิน<br>
+          ยอดชำระ <%= (typeof amount==='number' ? amount : 0).toFixed(2) %> บาท
+        </div>
+      </div>
+
+      <div class="instructions text-start mx-auto mt-3" style="max-width: 560px;">
+        <p>ในกรณีที่ท่านเปิดหน้าจอนี้ด้วยอุปกรณ์มือถือ สามารถชำระเงินได้ตามขั้นตอนดังต่อไปนี้</p>
+        <ol>
+          <li>เซฟภาพหน้าจอ</li>
+          <li>เปิดแอพธนาคารของท่าน</li>
+          <li>เลือกเมนูสแกน QR</li>
+          <li>กดปุ่มรูปภาพ เพื่อเลือกภาพหน้าจอ QR ที่บันทึกไว้</li>
+        </ol>
+      </div>
+
+      <div class="contact mt-4 small mx-auto" style="max-width: 560px;">
+        หากไม่ได้รับ coin หรือมีปัญหาใด ๆ กรุณาติดต่อฝ่ายบริการลูกค้าได้ที่<br>
+        <b>โทร:</b> 02-962-1698 (จันทร์–ศุกร์ 09.30–19.30 น. ยกเว้นวันหยุดราชการ)<br>
+        <b>มือถือ:</b> 084-090-3148 (ทุกวัน 09.30–19.30 น.)<br>
+        <b>E-mail:</b> websiteeinovel@gmail.com (ทุกวัน 24 ชั่วโมง)
+      </div>
+
+      <!-- confirm payment -->
+      <form id="confirmForm" class="d-grid mt-4" style="max-width: 420px; width: 100%;">
+        <input type="hidden" id="orderId"
+          value="<%= (typeof order !== 'undefined' && order && order.orderId) ? order.orderId : '' %>">
+        <button type="button" id="confirmBtn" class="btn btn-success btn-lg">
+          ✅ ยืนยันการชำระเงินแล้ว
+        </button>
+        <div class="mt-2" style="font-size: 0.8rem;">
+          กดปุ่มนี้หลังจากโอนเงินเรียบร้อย เพื่อให้ระบบตรวจและเติมเหรียญอัตโนมัติ
+        </div>
+      </form>
+
+      <script>
+        // ให้สคริปต์ด้านล่างมีสำรองอีกชั้น
+        window.__ORDER_ID__ = "<%= (typeof order !== 'undefined' && order && order.orderId) ? order.orderId : '' %>";
+      </script>
+
+    </div>
+  </main>
+
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow" id="settings">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">การตั้งค่าเว็บไซต์</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Font Size -->
+          <div class="mb-3">
+            <label class="form-label">ขนาดตัวอักษร</label>
+            <select id="fontSizeSelect" class="form-select rounded-pill">
+              <option value="14px">เล็ก</option>
+              <option value="16px" selected>ปกติ</option>
+              <option value="20px">ใหญ่</option>
+            </select>
+          </div>
+
+          <!-- Font Family -->
+          <div class="mb-3">
+            <label class="form-label">Font</label>
+            <select id="fontFamilySelect" class="form-select rounded-pill">
+              <option value="Arial, sans-serif" selected>Sans-serif</option>
+              <option value="Georgia, serif">Serif</option>
+              <option value="Courier New, monospace">Monospace</option>
+            </select>
+          </div>
+
+          <!-- Theme -->
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="themeSwitch">
+            <label class="form-check-label" for="themeSwitch">โหมดมืด</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-light" id="footer">
+    <div class="container py-4">
+      <div class="row">
+        <!-- Column 1: About -->
+        <div class="col-md-4">
+          <h5>About Us</h5>
+          <p>เว็บไซต์สำหรับติดตามนิยายแนวต่าง ๆ และข่าวสารเกี่ยวกับเรื่องโปรดของคุณ</p>
+        </div>
+
+        <!-- Column 2: Links -->
+        <div class="col-md-4">
+          <h5>Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-decoration-none">Romantic</a></li>
+            <li><a href="#" class="text-decoration-none">Fantasy</a></li>
+            <li><a href="#" class="text-decoration-none">Mystery</a></li>
+            <li><a href="#" class="text-decoration-none">Action</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Contact -->
+        <div class="col-md-4">
+          <h5>Contact</h5>
+          <p>Email: websiteeinovel@gmail.com</p>
+          <p>Phone: +66 123 456 789</p>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        &copy; 2025 MySite. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/settings.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const btn = document.getElementById('confirmBtn');
+      const orderIdEl = document.getElementById('orderId');
+
+      if (!btn) return;
+
+      btn.addEventListener('click', async () => {
+        const orderId = (orderIdEl?.value || window.__ORDER_ID__ || '').trim();
+        if (!orderId) {
+          alert('ไม่พบหมายเลขคำสั่งซื้อ (orderId)');
+          return;
+        }
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = 'กำลังยืนยัน...';
+
+        try {
+          const res = await fetch('/api/topup/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId })
+          });
+          const json = await res.json();
+
+          if (!res.ok || !json.ok) {
+            throw new Error(json.error || 'ยืนยันไม่สำเร็จ');
+          }
+
+          alert(`สำเร็จ! เติมเหรียญให้แล้ว +${json.coins} เหรียญ`);
+          // จะพาไปหน้ากระเป๋า หรือรีเฟรชหน้า
+          window.location.href = '/wallet'; // แก้เป็นหน้าที่คุณต้องการ
+        } catch (e) {
+          alert(e.message || 'เกิดข้อผิดพลาด');
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      });
+    })();
+  </script>
+</body>

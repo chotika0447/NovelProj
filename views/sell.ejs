@@ -1,0 +1,97 @@
+<%- include('includes/head.ejs') %>
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 125px;" id="navbar">
+    <div class="container-fluid row">
+      <a class="navbar-brand d-flex align-items-center col-1" href="/">
+        <img src="/images/logo.png" alt="logo" style="height: 40px;">
+        <span class="ms-2">Ei Novel</span>
+      </a>
+      <div style="display: flex;" class="col-3">
+        <div class="row">
+          <img class="col-3" src="/images/search.png" alt="search" style="height: 40px;">
+          <form class="col-9" id="search" style="display: flex;justify-content: center;">
+            <input class="rounded-pill" type="search" name="search" id="search">
+          </form>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse justify-content-center col-6" id="navbarNav-Catagory">
+        <ul class="navbar-nav">
+          <% categories.forEach(category=> { %>
+            <li class="nav-item me-3">
+              <a class="nav-link" href="#">
+                <%= category %>
+              </a>
+            </li>
+            <% }); %>
+        </ul>
+      </div>
+      <div class="collapse navbar-collapse justify-content-end col-2" id="navbarNav-user">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/topup">
+              <button class="rounded-pill"
+                style="color: rgb(0, 0, 0); background-color: gold; display: flex; justify-content: center; align-items: center;height: 30px;">
+                <img src="/images/coin.png" alt="pic-coin" class="img-fluid" style="height: 30px;">
+                <span>Coin</span>
+              </button>
+            </a>
+          </li>
+          <% if (!user) { %>
+            <!-- ยังไม่ login -->
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login">
+                <button class="rounded-pill" style="color: white; background-color: black;">
+                  Login
+                </button>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#" data-bs-toggle="modal"
+                data-bs-target="#settingsModal">
+                <button class="rounded-pill" style="color: white; background-color: gray;">
+                  ⚙️
+                </button>
+              </a>
+            </li>
+            <% } else { %>
+              <!-- login แล้ว -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <button class="rounded-pill" style="color: white; background-color: black;">
+                    Profile (<%= user.username %>)
+                  </button>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/account">Account</a></li>
+                  <li><a class="dropdown-item" href="/sell">Writer</a></li>
+                  <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                      data-bs-target="#settingsModal">Settings</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+        </ul>
+      </div>
+  </nav>
+<!-- <%- include('includes/main_header.ejs') %> -->
+<%- include('includes/writer_header.ejs') %>
+
+
+<main class="d-flex flex-column px-5 h-auto vw-100 justify-content-center align-content-center">
+    <div class="m-3 mb-0">
+        <h5 class="p-2 pb-0 fs-4 fw-bold">ยอดขายรวม: x coins </h5>
+
+        <div class="p-4 m-2 rounded-3 mb-3" style=" background-color: rgb(233, 233, 172);">
+            รายการ
+        </div>
+
+        <div class="p-4 m-2 rounded-3" style=" background-color: rgb(233, 233, 172);">
+            <div id="d-flex flex-row gap-2 mb-0">
+                <div style="width: 100px; height: 100px; background-color: rgb(227, 181, 55);"></div>
+                <label style="font-size: 15px;">
+                    ยอดการเข้าชม: 0<br>ยอดการกดไลก์: 0<br>ยอดคอมเมนท์: 0
+                </label>
+            </div>
+        </div>
+    </div>
+</main>
+<%- include('includes/footer.ejs') %>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Ei Novel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 125px;" id="navbar">
+    <div class="container-fluid row">
+      <a class="navbar-brand d-flex align-items-center col-1" href="/">
+        <img src="/images/logo.png" alt="logo" style="height: 40px;">
+        <span class="ms-2">Ei Novel</span>
+      </a>
+      <div style="display: flex;" class="col-3">
+        <div class="row">
+          <img class="col-3" src="/images/search.png" alt="search" style="height: 40px;">
+          <form action="/search" class="col-9" id="search" style="display: flex;justify-content: center;">
+            <input class="rounded-pill" type="search" name="q" id="search">
+          </form>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse justify-content-center col-6" id="navbarNav-Catagory">
+        <ul class="navbar-nav">
+          <% categories.forEach(category=> { %>
+            <li class="nav-item me-3">
+              <a class="nav-link" href="/category/<%= category %>">
+                <%= category %>
+              </a>
+            </li>
+            <% }); %>
+        </ul>
+      </div>
+      <div class="collapse navbar-collapse justify-content-end col-2" id="navbarNav-user">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/topup">
+              <button class="rounded-pill"
+                style="color: rgb(0, 0, 0); background-color: gold; display: flex; justify-content: center; align-items: center;height: 30px;">
+                <img src="/images/coin.png" alt="pic-coin" class="img-fluid" style="height: 30px;">
+                <span><%= user ? coins : 'Coin' %></span>
+              </button>
+            </a>
+          </li>
+          <% if (!user) { %>
+            <!-- ยังไม่ login -->
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login">
+                <button class="rounded-pill" style="color: white; background-color: black;">
+                  Login
+                </button>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#" data-bs-toggle="modal"
+                data-bs-target="#settingsModal">
+                <button class="rounded-pill" style="color: white; background-color: gray;">
+                  ⚙️
+                </button>
+              </a>
+            </li>
+            <% } else { %>
+              <!-- login แล้ว -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <button class="rounded-pill" style="color: white; background-color: black;">
+                    Profile (<%= user.username %>)
+                  </button>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/account">Account</a></li>
+                  <li><a class="dropdown-item" href="/writer">Writer</a></li>
+                  <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                      data-bs-target="#settingsModal">Settings</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+        </ul>
+      </div>
+  </nav>
+<div class="d-flex vw-100 min-vh-100">
+    <!-- ฝั่งเมนู -->
+    <aside class="d-flex flex-column w-25 bg-light" style="background-color: rgb(212, 212, 212);">
+        <!-- กลับไปหน้าหลักของนักเขียน -->
+        <div class="d-flex flex-column">
+            <button onclick="window.location.href='/'" 
+                    class="flex-fill text-start border-0 py-1 fs-6 border-buttom">
+                &larr; กลับไปหน้าจัดการงานเขียน
+            </button>
+        </div>
+
+        <!-- ตั้งค่าเล่ม -->
+        <div class="d-flex flex-column">
+            <button id="bookSetting_btn" 
+                    class="flex-fill text-start text-dark border-0 py-1 fs-5"  
+                    style="background-color: rgb(212, 212, 212);">
+                ตั้งค่าข้อมูลของเล่ม
+            </button>
+        </div>
+
+        <!-- แถบตอน -->
+        <div class="d-flex justify-content-between align-items-center border-top h-auto text-dark p-2"  
+             style="background-color: rgb(212, 212, 212);">
+            <h5 id="totalEPs">ตอนทั้งหมด (<%= totalEp %>)</h5>
+            <button id="moreEp" class="btn btn-light btn-sm">เพิ่มตอนใหม่</button>
+        </div>
+
+        <!-- ลิสต์ตอนทั้งหมด -->
+        <div id="epList" class="d-flex flex-grow-1 flex-column p-2 gap-2">
+            <!-- จะเติมผ่าน JS -->
+        </div>
+    </aside>
+
+    <!-- ฝั่งแสดงผล -->
+    <main id="rightScreen" 
+          class="w-75 min-vh-100 d-flex flex-column" 
+          data-book-id="<%= book?._id || '' %>">
+
+        <!-- ฟอร์มตั้งค่าเล่ม -->
+        <div class="p-3">
+            <div class="mb-3">
+                <label for="novTitleInput" class="form-label">ชื่อเรื่อง</label>
+                <input type="text" class="form-control" id="novTitleInput" 
+                       value="<%= book ? book.title : '' %>">
+            </div>
+
+            <div class="mb-3">
+                <label for="novShortsInput" class="form-label">คำโปรย</label>
+                <textarea class="form-control" id="novShortsInput" rows="3"><%= book ? book.desc : '' %></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="mainCateChoice" class="form-label">หมวดหมู่</label>
+                <input type="text" class="form-control" id="mainCateChoice" 
+                       value="<%= book ? book.category : '' %>">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">ปกหนังสือ</label><br>
+                <img id="coverPreview" src="<%= book?.img || '/images/placeholder.png' %>" 
+                     alt="cover" style="max-width: 150px;" class="mb-2">
+                <input type="file" id="coverUpload" class="form-control">
+            </div>
+
+            <button id="saveBookBtn" class="btn btn-primary">บันทึกเล่ม</button>
+        </div>
+    </main>
+</div>
+<!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow" id="settings">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">การตั้งค่าเว็บไซต์</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Font Size -->
+          <div class="mb-3">
+            <label class="form-label">ขนาดตัวอักษร</label>
+            <select id="fontSizeSelect" class="form-select rounded-pill">
+              <option value="14px">เล็ก</option>
+              <option value="16px" selected>ปกติ</option>
+              <option value="20px">ใหญ่</option>
+            </select>
+          </div>
+
+          <!-- Font Family -->
+          <div class="mb-3">
+            <label class="form-label">Font</label>
+            <select id="fontFamilySelect" class="form-select rounded-pill">
+              <option value="Arial, sans-serif" selected>Sans-serif</option>
+              <option value="Georgia, serif">Serif</option>
+              <option value="Courier New, monospace">Monospace</option>
+            </select>
+          </div>
+
+          <!-- Theme -->
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="themeSwitch">
+            <label class="form-check-label" for="themeSwitch">โหมดมืด</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/settings.js"></script>
+<script src="/js/add.js"></script>
+<script src="/js/uploadImage.js"></script>
+<script src="/js/rating.js"></script>
+</body>
+<%- include('includes/footer.ejs') %>

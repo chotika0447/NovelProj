@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>
+    <%= 'อ่านนิยาย' %>
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #fafafa;
+    }
+
+    .reader-container {
+      max-width: 900px;
+    }
+
+    .chapter-content {
+      line-height: 1.9;
+      font-size: var(--reader-font, 18px);
+      white-space: pre-wrap;
+    }
+
+    .sticky-controls {
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+
+    .btn-circle {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 125px;" id="navbar">
+    <div class="container-fluid row">
+      <a class="navbar-brand d-flex align-items-center col-1" href="/">
+        <img src="/images/logo.png" alt="logo" style="height: 40px;">
+        <span class="ms-2">Ei Novel</span>
+      </a>
+      <div style="display: flex;" class="col-3">
+        <div class="row">
+          <img class="col-3" src="/images/search.png" alt="search" style="height: 40px;">
+          <form action="/search" class="col-9" id="search" style="display: flex;justify-content: center;">
+            <input class="rounded-pill" type="search" name="q" id="search">
+          </form>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse justify-content-center col-6" id="navbarNav-Catagory">
+        <ul class="navbar-nav">
+          <% categories.forEach(category=> { %>
+            <li class="nav-item me-3">
+              <a class="nav-link" href="/category/<%= category %>">
+                <%= category %>
+              </a>
+            </li>
+            <% }); %>
+        </ul>
+      </div>
+      <div class="collapse navbar-collapse justify-content-end col-2" id="navbarNav-user">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/topup">
+              <button class="rounded-pill"
+                style="color: rgb(0, 0, 0); background-color: gold; display: flex; justify-content: center; align-items: center;height: 30px;">
+                <img src="/images/coin.png" alt="pic-coin" class="img-fluid" style="height: 30px;">
+                <span>
+                  <%= user ? coins : 'Coin' %>
+                </span>
+              </button>
+            </a>
+          </li>
+          <% if (!user) { %>
+            <!-- ยังไม่ login -->
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login">
+                <button class="rounded-pill" style="color: white; background-color: black;">
+                  Login
+                </button>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#" data-bs-toggle="modal"
+                data-bs-target="#settingsModal">
+                <button class="rounded-pill" style="color: white; background-color: gray;">
+                  ⚙️
+                </button>
+              </a>
+            </li>
+            <% } else { %>
+              <!-- login แล้ว -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <button class="rounded-pill" style="color: white; background-color: black;">
+                    Profile (<%= user.username %>)
+                  </button>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/account">Account</a></li>
+                  <li><a class="dropdown-item" href="/writer">Writer</a></li>
+                  <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                      data-bs-target="#settingsModal">Settings</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+        </ul>
+      </div>
+  </nav>
+  <header class="sticky-controls">
+    <div class="container d-flex align-items-center justify-content-between py-2">
+      <div class="d-flex align-items-center gap-3">
+        <a class="btn btn-outline-secondary btn-sm"
+          href="/books/<%= (book.rank !== undefined && book.rank !== null) ? book.rank : (book.slug || book.id) %>">
+          ← กลับหน้าเรื่อง
+        </a>
+        <div class="text-truncate">
+          <div class="small text-muted">
+            <%= book.title %>
+          </div>
+          <div class="fw-semibold">ตอนที่ <%= chapter.index %> • <%= chapter.title %>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-circle" id="decFont" title="ตัวเล็กลง">A-</button>
+        <button class="btn btn-outline-secondary btn-circle" id="incFont" title="ตัวใหญ่ขึ้น">A+</button>
+
+        <% if (prevCh) { %>
+          <a class="btn btn-outline-secondary btn-sm" href="/reader/<%= prevCh._id %>">« ตอนที่ <%= prevCh.index %></a>
+          <% } else { %>
+            <button class="btn btn-outline-secondary btn-sm" disabled>«</button>
+            <% } %>
+
+              <% if (nextCh) { %>
+                <a class="btn btn-primary btn-sm" href="/reader/<%= nextCh._id %>">ตอนที่ <%= nextCh.index %> »</a>
+                <% } else { %>
+                  <button class="btn btn-secondary btn-sm" disabled>»</button>
+                  <% } %>
+      </div>
+    </div>
+  </header>
+
+  <main class="container reader-container py-4">
+    <div class="mb-2 small">เผยแพร่: <%= chapter.date %> · อ่าน <%= chapter.viewCount %> ครั้ง</div>
+
+    <article class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-3">ตอนที่ <%= chapter.index %>: <%= chapter.title %>
+        </h1>
+
+        <!-- ✅ ไม่ล็อก: แสดงเนื้อหาเสมอ -->
+        <div id="readerBody" class="chapter-content">
+          <%= chapter.content %>
+
+        </div>
+      </div>
+    </article>
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <% if (prevCh) { %>
+        <a class="btn btn-outline-secondary" href="/reader/<%= prevCh._id %>">« ตอนที่ <%= prevCh.index %> — <%=
+              prevCh.title %></a>
+        <% } else { %><span></span>
+          <% } %>
+
+            <% if (nextCh) { %>
+              <a class="btn btn-primary" href="/reader/<%= nextCh._id %>">ตอนที่ <%= nextCh.index %> — <%= nextCh.title
+                    %> »</a>
+              <% } %>
+    </div>
+  </main>
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow" id="settings">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">การตั้งค่าเว็บไซต์</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Font Size -->
+          <div class="mb-3">
+            <label class="form-label">ขนาดตัวอักษร</label>
+            <select id="fontSizeSelect" class="form-select rounded-pill">
+              <option value="14px">เล็ก</option>
+              <option value="16px" selected>ปกติ</option>
+              <option value="20px">ใหญ่</option>
+            </select>
+          </div>
+
+          <!-- Font Family -->
+          <div class="mb-3">
+            <label class="form-label">Font</label>
+            <select id="fontFamilySelect" class="form-select rounded-pill">
+              <option value="Arial, sans-serif" selected>Sans-serif</option>
+              <option value="Georgia, serif">Serif</option>
+              <option value="Courier New, monospace">Monospace</option>
+            </select>
+          </div>
+
+          <!-- Theme -->
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="themeSwitch">
+            <label class="form-check-label" for="themeSwitch">โหมดมืด</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const KEY = 'reader-font-size';
+      const defaultPx = 18;
+      const get = () => {
+        const v = Number(localStorage.getItem(KEY));
+        return Number.isFinite(v) && v >= 12 && v <= 28 ? v : defaultPx;
+      };
+      const set = (px) => {
+        px = Math.min(28, Math.max(12, px));
+        root.style.setProperty('--reader-font', px + 'px');
+        localStorage.setItem(KEY, String(px));
+      };
+      set(get());
+      document.getElementById('incFont')?.addEventListener('click', () => set(get() + 1));
+      document.getElementById('decFont')?.addEventListener('click', () => set(get() - 1));
+    })();
+  </script>
+  <script src="/js/settings.js"></script>
+</body>
+
+</html>
